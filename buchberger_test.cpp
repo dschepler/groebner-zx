@@ -82,4 +82,13 @@ TEST(Buchberger, Buchberger) {
   // representation of <3, -1+sqrt(-5)> in Z[sqrt(-5)]
   EXPECT_EQ(buchberger_of({ {1, 0, 5}, {1, -1}, {3} }),
 	    (ideal_basis{ {1, 2}, {3} }));
+
+#ifdef RUN_EXPENSIVE_TESTS
+  // This might be a good test case to run if making changes to the
+  // algorithm, to check that this still runs in a reasonable time.
+  EXPECT_EQ(buchberger_of({ {1, 0, 0, 5, 3, 0, 0, 0, 0, 0, 9, 0, 0, -3, 0, -1, 0, 0, 0, 0, 0, 0},
+			    {3, 0, 1, 4, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 1} }),
+            (ideal_basis{ {1, 7747110435841547256507133_Z},
+			  {11529190147322608601758016_Z} }));
+#endif // RUN_EXPENSIVE_TESTS
 }

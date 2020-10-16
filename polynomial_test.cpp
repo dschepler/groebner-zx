@@ -50,6 +50,20 @@ TEST(Polynomial, ScalarMult) {
   EXPECT_EQ((-3 * polynomial{1, -2, 3}), (polynomial{-3, 6, -9}));
 }
 
+TEST(Polynomial, Add) {
+    EXPECT_EQ((polynomial{} + polynomial{}), (polynomial{}));
+    EXPECT_EQ((polynomial{1, 2, 3} + polynomial{}), (polynomial{1, 2, 3}));
+    EXPECT_EQ((polynomial{} + polynomial{1, 2, 3}), (polynomial{1, 2, 3}));
+    EXPECT_EQ((polynomial{1, 2, 3} + polynomial{1, 2, 3}), (polynomial{2, 4, 6}));
+    EXPECT_EQ((polynomial{1, 2, 3} + polynomial{-1, -2, -3}), (polynomial{}));
+    EXPECT_EQ((polynomial{1, 2, 3, 4} + polynomial{-1, -2, 5, 6}),
+              (polynomial{8, 10}));
+    EXPECT_EQ((polynomial{1, 2, 3, 4} + polynomial{5, 6}),
+              (polynomial{1, 2, 8, 10}));
+    EXPECT_EQ((polynomial{5, 6} + polynomial{1, 2, 3, 4}),
+              (polynomial{1, 2, 8, 10}));
+}
+
 TEST(Polynomial, Subtract) {
   EXPECT_EQ((polynomial{} - polynomial{}), (polynomial{}));
   EXPECT_EQ((polynomial{1, 2, 3} - polynomial{}), (polynomial{1, 2, 3}));
@@ -61,6 +75,26 @@ TEST(Polynomial, Subtract) {
 	    (polynomial{1, 2, -2, -2}));
   EXPECT_EQ((polynomial{5, 6} - polynomial{1, 2, 3, 4}),
 	    (polynomial{-1, -2, 2, 2}));
+}
+
+TEST(Polynomial, Multiply) {
+    EXPECT_EQ((polynomial{} * polynomial{}), (polynomial{}));
+    EXPECT_EQ((polynomial{} * polynomial{1, 2, 3}), (polynomial{}));
+    EXPECT_EQ((polynomial{1, 2, 3} * polynomial{}), (polynomial{}));
+    EXPECT_EQ((polynomial{2} * polynomial{1, 2, 3}), (polynomial{2, 4, 6}));
+    EXPECT_EQ((polynomial{1, 2, 3} * polynomial{2}), (polynomial{2, 4, 6}));
+    EXPECT_EQ((polynomial{1, 5} * polynomial{1, 6}), (polynomial{1, 11, 30}));
+    EXPECT_EQ((polynomial{1, 2} * polynomial{1, -2}), (polynomial{1, 0, -4}));
+    EXPECT_EQ((polynomial{1, 1, 1, 1, 1} * polynomial{1, 1, 1}), (polynomial{1, 2, 3, 3, 3, 2, 1}));
+}
+
+TEST(Polynomial, ExprTemplates) {
+    polynomial p { 2, 3, 4 };
+    polynomial q { 5, 6 };
+    EXPECT_EQ(p * q - p, p * (q - polynomial{1}));
+    EXPECT_EQ(p + q + p, 2 * p + q);
+    EXPECT_EQ(3 * p + 4 * times_x_to(q, 2), (polynomial{20, 30, 9, 12}));
+    EXPECT_EQ(5 * p - 2 * times_x_to(q, 1), (polynomial{3, 20}));
 }
 
 TEST(Polynomial, ToString) {

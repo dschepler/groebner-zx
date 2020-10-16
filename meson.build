@@ -1,4 +1,4 @@
-project('groebner', 'cpp')
+project('groebner', 'cpp', default_options: ['cpp_std=c++17'])
 gmpxxdep = dependency('gmpxx')
 groebner_lib = static_library('groebnerlib',
 			      'buchberger.cpp',

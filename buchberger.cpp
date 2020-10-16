@@ -42,10 +42,10 @@ bool buchberger_search(ideal_basis& b) {
     }
     if (p != *i) {
       if (p.coefficients().front() < 0)
-	p = -p;
+	p.negate();
       b.erase(i);
       if (p != polynomial{})
-	b.insert(p);
+    b.insert(std::move(p));
       return true;
     }
   }
@@ -55,13 +55,13 @@ bool buchberger_search(ideal_basis& b) {
   // of forming the twist of pairs in the usual Buchberger algorithm.
   for (auto i = b.begin(); i != b.end(); ++i) {
     for (auto j = std::next(i); j != b.end(); ++j) {
-      auto p = j->times_x_to(i->degree() - j->degree());
+      polynomial p = j->times_x_to(i->degree() - j->degree());
       for (auto k = i; k != b.end(); ++k)
 	reduce_mod(p, *k);
       if (p != polynomial{}) {
 	if (p.coefficients().front() < 0)
-	  p = -p;
-	b.insert(p);
+	  p.negate();
+    b.insert(std::move(p));
 	return true;
       }
     }
@@ -79,9 +79,9 @@ void buchberger(ideal_basis& b) {
     auto i = std::find_if(b.begin(), b.end(), [](const polynomial& p) { return p.coefficients().front() < 0; });
     if (i == b.end())
       break;
-    auto minus_p = -(*i);
+    polynomial minus_p = -(*i);
     b.erase(i);
-    b.insert(minus_p);
+    b.insert(std::move(minus_p));
   }
 
   while (buchberger_search(b))

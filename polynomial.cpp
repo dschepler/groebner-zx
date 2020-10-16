@@ -1,7 +1,6 @@
 #include "polynomial.h"
 #include <algorithm>
 
-polynomial::polynomial() { }
 polynomial::polynomial(std::initializer_list<Z> coeffs) : m_coeffs(coeffs)
 {
   normalize();
@@ -18,44 +17,9 @@ void polynomial::normalize() {
   m_coeffs.erase(m_coeffs.begin(), first_nonzero);
 }
 
-int polynomial::degree() const {
-  return m_coeffs.size() - 1;
-}
-
-Z polynomial::coefficient(int d) const {
-  if (d > degree())
-    return 0;
-  return m_coeffs[degree() - d];
-}
-
-const std::vector<Z>& polynomial::coefficients() const {
-  return m_coeffs;
-}
-
 void polynomial::negate() {
   for (auto& coeff : m_coeffs)
     coeff = -coeff;
-}
-
-polynomial polynomial::times_x_to(int n) const {
-  if (m_coeffs.empty())
-    return *this;
-  auto result_coeffs = m_coeffs;
-  for (int i = 0; i < n; i++)
-    result_coeffs.push_back(0);
-  return polynomial{result_coeffs};
-}
-
-polynomial& polynomial::operator-=(const polynomial& other) {
-  while (other.m_coeffs.size() > this->m_coeffs.size())
-    m_coeffs.insert(m_coeffs.begin(), 0);
-  auto i = m_coeffs.begin() + (this->m_coeffs.size() - other.m_coeffs.size());
-  for (const auto& other_coeff : other.m_coeffs) {
-    *i -= other_coeff;
-    ++i;
-  }
-  normalize();
-  return *this;
 }
 
 polynomial& polynomial::operator*=(Z n) {
@@ -68,29 +32,38 @@ polynomial& polynomial::operator*=(Z n) {
   return *this;
 }
 
-bool operator==(const polynomial& p, const polynomial& q) {
-  return p.coefficients() == q.coefficients();
-}
-bool operator!=(const polynomial& p, const polynomial& q) {
-  return !(p == q);
-}
+polynomial operator*(const polynomial& p, const polynomial& q) {
+    // Following the classic recursive algorithm with O(d^lg(3)) multiplications of Z values
 
-polynomial operator-(const polynomial& p) {
-  polynomial result = p;
-  result.negate();
-  return result;
-}
+    if (p == polynomial{} || q == polynomial{})
+        return polynomial{};
+    if (p.degree() == 0)
+        return p.coefficient(0) * q;
+    if (q.degree() == 0)
+        return p * q.coefficient(0);
 
-polynomial operator-(const polynomial& p, const polynomial& q) {
-  polynomial result = p;
-  result -= q;
-  return result;
-}
+    // In the following, we'll be using each coefficient of p and q
+    // multiple times, which is why we have designed the interface to let
+    // the caller materialize p and q for us.
 
-polynomial operator*(Z n, const polynomial& p) {
-  polynomial result = p;
-  result *= n;
-  return result;
+    polynomial_expr pe { p.degree() / 2, [&p](int d) -> const Z& { return p.coefficient(d * 2); } };
+    polynomial_expr po { (p.degree() - 1) / 2, [&p](int d) -> const Z& { return p.coefficient(d * 2 + 1); } };
+    polynomial_expr qe { q.degree() / 2, [&q](int d) -> const Z& { return q.coefficient(d * 2); } };
+    polynomial_expr qo { (q.degree() - 1) / 2, [&q](int d) -> const Z& { return q.coefficient(d * 2 + 1); } };
+
+    polynomial pe_qe = pe * qe;
+    polynomial po_qo = po * qo;
+    polynomial pepo_qeqo = (pe + po) * (qe + qo);
+
+    return polynomial_expr {
+        p.degree() + q.degree(),
+        [&](int d) -> Z {
+            if (d % 2 == 0)
+                return (pe_qe + po_qo.times_x_to(1)).coefficient(d / 2);
+            else
+                return (pepo_qeqo - pe_qe - po_qo).coefficient(d / 2);
+        }
+    };
 }
 
 std::string polynomial::monomial_to_string(const Z& coeff, int d) {

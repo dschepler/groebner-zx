@@ -12,7 +12,7 @@ inline Z operator""_Z(const char* s) {
 }
 
 // polynomial expression templates: each type should declare a member type
-// polynomial_expr, and implement methods compatible with:
+// is_polynomial_expr, and implement methods compatible with:
 //    int degree_bound() const;
 //      upper bound on degree of the result (does not need to be exact in
 //      cases such as sum or difference of two polynomials)

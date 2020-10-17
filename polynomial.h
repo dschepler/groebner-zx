@@ -34,8 +34,6 @@ public:
     int degree_bound() const { return m_degree_bound; }
     Z coefficient(int d) const
     {
-        if (d > m_degree_bound)
-            return 0;
         return m_coeff_callable(d);
     }
 

@@ -42,9 +42,9 @@ TEST(Polynomial, Negate)
 
 TEST(Polynomial, TimesXTo)
 {
-    EXPECT_EQ((polynomial {}.times_x_to(5)), (polynomial {}));
-    EXPECT_EQ((polynomial { 1, 2, 3 }.times_x_to(0)), (polynomial { 1, 2, 3 }));
-    EXPECT_EQ((polynomial { 1, 2, 3 }.times_x_to(3)),
+    EXPECT_EQ(times_x_to(polynomial {}, 5), (polynomial {}));
+    EXPECT_EQ(times_x_to(polynomial { 1, 2, 3 }, 0), (polynomial { 1, 2, 3 }));
+    EXPECT_EQ(times_x_to(polynomial { 1, 2, 3 }, 3),
         (polynomial { 1, 2, 3, 0, 0, 0 }));
 }
 

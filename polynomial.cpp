@@ -37,6 +37,39 @@ polynomial& polynomial::operator*=(Z n)
     return *this;
 }
 
+namespace polynomial_mult_details {
+
+auto evenpart(const polynomial& p) {
+    return polynomial_expr {
+        p.degree() / 2,
+        [&p](int d) -> const Z& { return p.coefficient(d * 2); }
+    };
+}
+
+auto oddpart(const polynomial& p) {
+    return polynomial_expr {
+        (p.degree() - 1) / 2,
+        [&p](int d) -> const Z& { return p.coefficient(d * 2 + 1); }
+    };
+}
+
+template <typename PolyExpr1, typename PolyExpr2,
+          typename = typename PolyExpr1::is_polynomial_expr,
+          typename = typename PolyExpr2::is_polynomial_expr>
+auto interleave(PolyExpr1&& p, PolyExpr2&& q) {
+    return polynomial_expr {
+        std::max(2 * p.degree_bound(), 2 * q.degree_bound() + 1),
+        [&p, &q](int d) -> Z {
+            if (d % 2 == 0)
+                return p.coefficient(d / 2);
+            else
+                return q.coefficient(d / 2);
+        }
+    };
+}
+
+} // namespace polynomial_mult_details
+
 polynomial operator*(const polynomial& p, const polynomial& q)
 {
     // Following the classic recursive algorithm with O(d^lg(3)) multiplications of Z values
@@ -52,24 +85,18 @@ polynomial operator*(const polynomial& p, const polynomial& q)
     // multiple times, which is why we have designed the interface to let
     // the caller materialize p and q for us.
 
-    polynomial_expr pe { p.degree() / 2, [&p](int d) -> const Z& { return p.coefficient(d * 2); } };
-    polynomial_expr po { (p.degree() - 1) / 2, [&p](int d) -> const Z& { return p.coefficient(d * 2 + 1); } };
-    polynomial_expr qe { q.degree() / 2, [&q](int d) -> const Z& { return q.coefficient(d * 2); } };
-    polynomial_expr qo { (q.degree() - 1) / 2, [&q](int d) -> const Z& { return q.coefficient(d * 2 + 1); } };
+    auto pe = polynomial_mult_details::evenpart(p);
+    auto po = polynomial_mult_details::oddpart(p);
+    auto qe = polynomial_mult_details::evenpart(q);
+    auto qo = polynomial_mult_details::oddpart(q);
 
     polynomial pe_qe = pe * qe;
     polynomial po_qo = po * qo;
     polynomial pepo_qeqo = (pe + po) * (qe + qo);
 
-    return polynomial_expr {
-        p.degree() + q.degree(),
-        [&](int d) -> Z {
-            if (d % 2 == 0)
-                return (pe_qe + po_qo.times_x_to(1)).coefficient(d / 2);
-            else
-                return (pepo_qeqo - pe_qe - po_qo).coefficient(d / 2);
-        }
-    };
+    return polynomial_mult_details::interleave(
+        pe_qe + times_x_to(po_qo, 1),
+        pepo_qeqo - pe_qe - po_qo);
 }
 
 std::string polynomial::monomial_to_string(const Z& coeff, int d)

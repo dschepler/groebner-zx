@@ -177,13 +177,13 @@ public:
         static Z static_zero = 0;
         return d > degree() ? static_zero : m_coeffs[degree() - d];
     }
-    const std::vector<Z>& coefficients() const { return m_coeffs; }
+
+    // leading_coefficient has as a precondition that the polynomial must not be 0
+    const Z& leading_coefficient() const {
+        return m_coeffs.front();
+    }
 
     void negate();
-    auto times_x_to(int n) const
-    {
-        return ::times_x_to(*this, n);
-    }
 
     template <typename PolyExpr,
         typename = typename std::decay_t<PolyExpr>::is_polynomial_expr>

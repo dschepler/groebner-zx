@@ -3,20 +3,19 @@
 
 bool decreasing_leading_term::operator()(const polynomial& p, const polynomial& q) const
 {
-    const auto& p_coeffs = p.coefficients();
-    const auto& q_coeffs = q.coefficients();
-    if (p_coeffs.size() > q_coeffs.size())
+    if (p.degree() > q.degree())
         return true;
-    else if (p_coeffs.size() < q_coeffs.size())
+    else if (p.degree() < q.degree())
         return false;
-    else if (p_coeffs.empty())
+    else {
+        for (int d = p.degree(); d >= 0; --d) {
+            if (p.coefficient(d) > q.coefficient(d))
+                return true;
+            else if (p.coefficient(d) < q.coefficient(d))
+                return false;
+        }
         return false;
-    else if (p_coeffs.front() > q_coeffs.front())
-        return true;
-    else if (p_coeffs.front() < q_coeffs.front())
-        return false;
-    else
-        return p_coeffs > q_coeffs;
+    }
 }
 
 void reduce_mod(polynomial& p, const polynomial& q)
@@ -32,7 +31,7 @@ void reduce_mod(polynomial& p, const polynomial& q)
         Z quotient = p_coeff / q_leading_coeff;
         if (p_coeff - quotient * q_leading_coeff < 0)
             --quotient;
-        p -= quotient * q.times_x_to(i);
+        p -= quotient * times_x_to(q, i);
     }
 }
 
@@ -45,7 +44,7 @@ bool buchberger_search(ideal_basis& b)
             reduce_mod(p, *j);
         }
         if (p != *i) {
-            if (p.coefficients().front() < 0)
+            if (p.leading_coefficient() < 0)
                 p.negate();
             b.erase(i);
             if (p != polynomial {})
@@ -59,11 +58,11 @@ bool buchberger_search(ideal_basis& b)
     // of forming the twist of pairs in the usual Buchberger algorithm.
     for (auto i = b.begin(); i != b.end(); ++i) {
         for (auto j = std::next(i); j != b.end(); ++j) {
-            polynomial p = j->times_x_to(i->degree() - j->degree());
+            polynomial p = times_x_to(*j, i->degree() - j->degree());
             for (auto k = i; k != b.end(); ++k)
                 reduce_mod(p, *k);
             if (p != polynomial {}) {
-                if (p.coefficients().front() < 0)
+                if (p.leading_coefficient() < 0)
                     p.negate();
                 b.insert(std::move(p));
                 return true;
@@ -81,7 +80,7 @@ void buchberger(ideal_basis& b)
 
     // Make leading terms of all generators positive
     while (true) {
-        auto i = std::find_if(b.begin(), b.end(), [](const polynomial& p) { return p.coefficients().front() < 0; });
+        auto i = std::find_if(b.begin(), b.end(), [](const polynomial& p) { return p.leading_coefficient() < 0; });
         if (i == b.end())
             break;
         polynomial minus_p = -(*i);

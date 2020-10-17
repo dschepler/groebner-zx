@@ -179,7 +179,8 @@ public:
     }
 
     // leading_coefficient has as a precondition that the polynomial must not be 0
-    const Z& leading_coefficient() const {
+    const Z& leading_coefficient() const
+    {
         return m_coeffs.front();
     }
 

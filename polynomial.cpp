@@ -39,14 +39,16 @@ polynomial& polynomial::operator*=(Z n)
 
 namespace polynomial_mult_details {
 
-auto evenpart(const polynomial& p) {
+auto evenpart(const polynomial& p)
+{
     return polynomial_expr {
         p.degree() / 2,
         [&p](int d) -> const Z& { return p.coefficient(d * 2); }
     };
 }
 
-auto oddpart(const polynomial& p) {
+auto oddpart(const polynomial& p)
+{
     return polynomial_expr {
         (p.degree() - 1) / 2,
         [&p](int d) -> const Z& { return p.coefficient(d * 2 + 1); }
@@ -54,9 +56,10 @@ auto oddpart(const polynomial& p) {
 }
 
 template <typename PolyExpr1, typename PolyExpr2,
-          typename = typename PolyExpr1::is_polynomial_expr,
-          typename = typename PolyExpr2::is_polynomial_expr>
-auto interleave(PolyExpr1&& p, PolyExpr2&& q) {
+    typename = typename PolyExpr1::is_polynomial_expr,
+    typename = typename PolyExpr2::is_polynomial_expr>
+auto interleave(PolyExpr1&& p, PolyExpr2&& q)
+{
     return polynomial_expr {
         std::max(2 * p.degree_bound(), 2 * q.degree_bound() + 1),
         [&p, &q](int d) -> Z {

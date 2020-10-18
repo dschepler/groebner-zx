@@ -12,6 +12,28 @@ inline Z operator""_Z(const char* s)
     return operator""_mpz(s);
 }
 
+// This is a library for manipulating polynomials with integer
+// coefficients.  Note that because the library uses expression
+// templates behind the scenes, the following general restrictions
+// apply:
+//
+// * Use of "auto" keyword to initialize a variable with the result
+//   of a calculation will generally not work as expected.  Instead,
+//   explicitly set the result type to "polynomial".  e.g. instead of
+//     auto p = 2 * q + r;
+//   write
+//     polynomial p = 2 * q + r;
+//
+// * Assignment expressions aliasing the destination variable will not
+//   work as expected.  To work around this, use a polynomial constructor
+//   to materialize the intermediate result before assignment.  e.g.
+//   instead of
+//     p += 2 * times_x_to(p + q, 3);
+//   write
+//     p += polynomial{2 * times_x_to(p + q, 3)};
+
+
+
 // polynomial expression templates: each type should declare a member type
 // is_polynomial_expr, and implement methods compatible with:
 //    int degree_bound() const;
